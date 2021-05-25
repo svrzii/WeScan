@@ -63,8 +63,35 @@ extension CGPoint {
             smallestDistance = distanceTo(point: quad.bottomLeft)
             closestCorner = .bottomLeft
         }
+		
+		let topMiddle = getMiddlePoint(firstPoint: quad.topLeft, secondPoint: quad.topRight)
+		if distanceTo(point: topMiddle) < smallestDistance {
+			smallestDistance = distanceTo(point: topMiddle)
+			closestCorner = .topMiddle
+		}
+		
+		let bottomMiddle = getMiddlePoint(firstPoint: quad.bottomLeft, secondPoint: quad.bottomRight)
+		if distanceTo(point: bottomMiddle) < smallestDistance {
+			smallestDistance = distanceTo(point: bottomMiddle)
+			closestCorner = .bottomMiddle
+		}
+		
+		let leftMiddle = getMiddlePoint(firstPoint: quad.topLeft, secondPoint: quad.bottomLeft)
+		if distanceTo(point: leftMiddle) < smallestDistance {
+			smallestDistance = distanceTo(point: leftMiddle)
+			closestCorner = .leftMiddle
+		}
+		
+		let rightMiddle = getMiddlePoint(firstPoint: quad.topRight, secondPoint: quad.bottomRight)
+		if distanceTo(point: rightMiddle) < smallestDistance {
+			smallestDistance = distanceTo(point: rightMiddle)
+			closestCorner = .rightMiddle
+		}
         
         return closestCorner
     }
-    
+	
+	func getMiddlePoint(firstPoint: CGPoint, secondPoint: CGPoint) -> CGPoint {
+		return CGPoint(x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2)
+	}
 }

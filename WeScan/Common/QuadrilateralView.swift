@@ -16,6 +16,10 @@ enum CornerPosition {
     case topRight
     case bottomRight
     case bottomLeft
+	case topMiddle
+	case bottomMiddle
+	case rightMiddle
+	case leftMiddle
 }
 
 /// The `QuadrilateralView` is a simple `UIView` subclass that can draw a quadrilateral, and optionally edit it.
@@ -63,6 +67,10 @@ final class QuadrilateralView: UIView {
             topRightCornerView.strokeColor = strokeColor
             bottomRightCornerView.strokeColor = strokeColor
             bottomLeftCornerView.strokeColor = strokeColor
+			topMiddleCornerView.strokeColor = strokeColor
+			bottomMiddleCornerView.strokeColor = strokeColor
+			leftMiddleCornerView.strokeColor = strokeColor
+			rightMiddleCornerView.strokeColor = strokeColor
         }
     }
     
@@ -71,7 +79,7 @@ final class QuadrilateralView: UIView {
             guard oldValue != isHighlighted else {
                 return
             }
-            quadLayer.fillColor = isHighlighted ? UIColor.clear.cgColor : UIColor(white: 0.0, alpha: 0.6).cgColor
+			quadLayer.fillColor = isHighlighted ? UIColor.clear.cgColor : UIColor(white: 0.0, alpha: 0.6).cgColor
             isHighlighted ? bringSubviewToFront(quadView) : sendSubviewToBack(quadView)
         }
     }
@@ -91,9 +99,25 @@ final class QuadrilateralView: UIView {
     private lazy var bottomLeftCornerView: EditScanCornerView = {
         return EditScanCornerView(frame: CGRect(origin: .zero, size: cornerViewSize), position: .bottomLeft)
     }()
+	
+	private lazy var topMiddleCornerView: EditScanCornerView = {
+		return EditScanCornerView(frame: CGRect(origin: .zero, size: cornerViewSize), position: .topMiddle)
+	}()
+	
+	private lazy var bottomMiddleCornerView: EditScanCornerView = {
+		return EditScanCornerView(frame: CGRect(origin: .zero, size: cornerViewSize), position: .bottomMiddle)
+	}()
+	
+	private lazy var rightMiddleCornerView: EditScanCornerView = {
+		return EditScanCornerView(frame: CGRect(origin: .zero, size: cornerViewSize), position: .rightMiddle)
+	}()
+	
+	private lazy var leftMiddleCornerView: EditScanCornerView = {
+		return EditScanCornerView(frame: CGRect(origin: .zero, size: cornerViewSize), position: .leftMiddle)
+	}()
     
-    private let highlightedCornerViewSize = CGSize(width: 75.0, height: 75.0)
-    private let cornerViewSize = CGSize(width: 20.0, height: 20.0)
+    private let highlightedCornerViewSize = CGSize(width: 20, height: 20)
+    private let cornerViewSize = CGSize(width: 10, height: 10.0)
     
     // MARK: - Life Cycle
     
@@ -129,6 +153,10 @@ final class QuadrilateralView: UIView {
         addSubview(topRightCornerView)
         addSubview(bottomRightCornerView)
         addSubview(bottomLeftCornerView)
+		addSubview(topMiddleCornerView)
+		addSubview(bottomMiddleCornerView)
+		addSubview(leftMiddleCornerView)
+		addSubview(rightMiddleCornerView)
     }
     
     override public func layoutSubviews() {
@@ -182,7 +210,15 @@ final class QuadrilateralView: UIView {
         topRightCornerView.center = quad.topRight
         bottomLeftCornerView.center = quad.bottomLeft
         bottomRightCornerView.center = quad.bottomRight
+		topMiddleCornerView.center = getMiddlePoint(firstPoint: quad.topLeft, secondPoint: quad.topRight)
+		bottomMiddleCornerView.center = getMiddlePoint(firstPoint: quad.bottomLeft, secondPoint: quad.bottomRight)
+		rightMiddleCornerView.center = getMiddlePoint(firstPoint: quad.topRight, secondPoint: quad.bottomRight)
+		leftMiddleCornerView.center = getMiddlePoint(firstPoint: quad.topLeft, secondPoint: quad.bottomLeft)
     }
+	
+	func getMiddlePoint(firstPoint: CGPoint, secondPoint: CGPoint) -> CGPoint {
+		return CGPoint(x: (firstPoint.x + secondPoint.x) / 2, y: (firstPoint.y + secondPoint.y) / 2)
+	}
     
     func removeQuadrilateral() {
         quadLayer.path = nil
@@ -201,6 +237,11 @@ final class QuadrilateralView: UIView {
         cornerView.center = validPoint
         let updatedQuad = update(quad, withPosition: validPoint, forCorner: cornerView.position)
         
+		topMiddleCornerView.center = getMiddlePoint(firstPoint: topLeftCornerView.center, secondPoint: topRightCornerView.center)
+		bottomMiddleCornerView.center = getMiddlePoint(firstPoint: bottomLeftCornerView.center, secondPoint: bottomRightCornerView.center)
+		rightMiddleCornerView.center = getMiddlePoint(firstPoint: topRightCornerView.center, secondPoint: bottomRightCornerView.center)
+		leftMiddleCornerView.center = getMiddlePoint(firstPoint: topLeftCornerView.center, secondPoint: bottomLeftCornerView.center)
+		
         self.quad = updatedQuad
         drawQuad(updatedQuad, animated: false)
     }
@@ -216,10 +257,17 @@ final class QuadrilateralView: UIView {
             cornerView.highlightWithImage(image)
             return
         }
-
+		
+		
         let origin = CGPoint(x: cornerView.frame.origin.x - (highlightedCornerViewSize.width - cornerViewSize.width) / 2.0,
                              y: cornerView.frame.origin.y - (highlightedCornerViewSize.height - cornerViewSize.height) / 2.0)
         cornerView.frame = CGRect(origin: origin, size: highlightedCornerViewSize)
+		
+		topMiddleCornerView.center = getMiddlePoint(firstPoint: topLeftCornerView.center, secondPoint: topRightCornerView.center)
+		bottomMiddleCornerView.center = getMiddlePoint(firstPoint: bottomLeftCornerView.center, secondPoint: bottomRightCornerView.center)
+		rightMiddleCornerView.center = getMiddlePoint(firstPoint: topRightCornerView.center, secondPoint: bottomRightCornerView.center)
+		leftMiddleCornerView.center = getMiddlePoint(firstPoint: topLeftCornerView.center, secondPoint: bottomLeftCornerView.center)
+		
         cornerView.highlightWithImage(image)
     }
     
@@ -290,6 +338,7 @@ final class QuadrilateralView: UIView {
             quad.bottomRight = position
         case .bottomLeft:
             quad.bottomLeft = position
+		default: break
         }
         
         return quad
@@ -305,6 +354,14 @@ final class QuadrilateralView: UIView {
             return bottomLeftCornerView
         case .bottomRight:
             return bottomRightCornerView
-        }
+		case .topMiddle:
+			return bottomRightCornerView
+		case .bottomMiddle:
+			return bottomRightCornerView
+		case .leftMiddle:
+			return bottomRightCornerView
+		case .rightMiddle:
+			return bottomRightCornerView
+        }		
     }
 }
