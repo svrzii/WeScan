@@ -35,13 +35,15 @@ public protocol ImageScannerControllerDelegate: NSObjectProtocol {
     func imageScannerController(_ scanner: ImageScannerController, didFailWithError error: Error)
 }
 
+public var defaultAppColor = UIColor.black
+
 /// A view controller that manages the full flow for scanning documents.
 /// The `ImageScannerController` class is meant to be presented. It consists of a series of 3 different screens which guide the user:
 /// 1. Uses the camera to capture an image with a rectangle that has been detected.
 /// 2. Edit the detected rectangle.
 /// 3. Review the cropped down version of the rectangle.
 open class ImageScannerController: UINavigationController {
-    
+
     /// The object that acts as the delegate of the `ImageScannerController`.
     public weak var imageScannerDelegate: ImageScannerControllerDelegate?
     
@@ -60,12 +62,17 @@ open class ImageScannerController: UINavigationController {
         return .portrait
     }
     
-    public required init(image: UIImage? = nil, delegate: ImageScannerControllerDelegate? = nil) {
+	public required init(image: UIImage? = nil, delegate: ImageScannerControllerDelegate? = nil, defaultColor: UIColor? = nil) {
         super.init(rootViewController: ScannerViewController())
         
         self.imageScannerDelegate = delegate
+		
+		defaultAppColor = defaultColor ?? .black
+		navigationBar.isTranslucent = false
 		navigationBar.tintColor = .white
-        navigationBar.isTranslucent = false
+		navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+		navigationBar.barTintColor = defaultAppColor
+		navigationBar.backItem?.title = ""
         self.view.addSubview(blackFlashView)
         setupConstraints()
         

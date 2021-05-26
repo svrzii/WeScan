@@ -27,7 +27,7 @@ final class QuadrilateralView: UIView {
     
     private let quadLayer: CAShapeLayer = {
         let layer = CAShapeLayer()
-        layer.strokeColor = UIColor.white.cgColor
+		layer.strokeColor = UIColor.white.cgColor
         layer.lineWidth = 1.0
         layer.opacity = 1.0
         layer.isHidden = true
@@ -50,7 +50,7 @@ final class QuadrilateralView: UIView {
     public var editable = false {
         didSet {
             cornerViews(hidden: !editable)
-            quadLayer.fillColor = editable ? UIColor(white: 0.0, alpha: 0.6).cgColor : UIColor(white: 1.0, alpha: 0.5).cgColor
+			quadLayer.fillColor = editable ? UIColor(white: 0.0, alpha: 0.6).cgColor : defaultAppColor.withAlphaComponent(0.6).cgColor
             guard let quad = quad else {
                 return
             }
@@ -79,7 +79,7 @@ final class QuadrilateralView: UIView {
             guard oldValue != isHighlighted else {
                 return
             }
-			quadLayer.fillColor = isHighlighted ? UIColor.clear.cgColor : UIColor(white: 0.0, alpha: 0.6).cgColor
+			quadLayer.fillColor = isHighlighted ? UIColor.clear.cgColor : defaultAppColor.withAlphaComponent(0.6).cgColor
             isHighlighted ? bringSubviewToFront(quadView) : sendSubviewToBack(quadView)
         }
     }
@@ -324,6 +324,10 @@ final class QuadrilateralView: UIView {
         topRightCornerView.isHidden = hidden
         bottomRightCornerView.isHidden = hidden
         bottomLeftCornerView.isHidden = hidden
+		topMiddleCornerView.isHidden = hidden
+		bottomMiddleCornerView.isHidden = hidden
+		leftMiddleCornerView.isHidden = hidden
+		rightMiddleCornerView.isHidden = hidden
     }
     
     private func update(_ quad: Quadrilateral, withPosition position: CGPoint, forCorner corner: CornerPosition) -> Quadrilateral {

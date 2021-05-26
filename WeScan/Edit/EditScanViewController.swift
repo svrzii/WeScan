@@ -11,7 +11,10 @@ import AVFoundation
 
 /// The `EditScanViewController` offers an interface for the user to edit the detected quadrilateral.
 final class EditScanViewController: UIViewController {
-    
+	private var rotationAngle = Measurement<UnitAngle>(value: 0, unit: .degrees)
+	private var enhancedImageIsAvailable = true
+	private var isCurrentlyDisplayingEnhancedImage = false
+	
     private lazy var imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.clipsToBounds = true
@@ -30,17 +33,35 @@ final class EditScanViewController: UIViewController {
         return quadView
     }()
     
-    private lazy var nextButton: UIBarButtonItem = {
-        let title = NSLocalizedString("wescan.edit.button.next", tableName: nil, bundle: Bundle(for: EditScanViewController.self), value: "Next", comment: "A generic next button")
-        let button = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(pushReviewController))
-        button.tintColor = navigationController?.navigationBar.tintColor
-        return button
-    }()
+//    private lazy var nextButton: UIBarButtonItem = {
+//        let button = UIBarButtonItem(title: NSLocalizedString("Next", comment: ""), style: .plain, target: self, action: #selector(pushReviewController))
+//        button.tintColor = .white
+//        return button
+//    }()
+	
+	private lazy var enhanceButton: UIBarButtonItem = {
+		let image = UIImage(systemName: "wand.and.rays.inverse", named: "enhance", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
+		let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(toggleEnhancedImage))
+		button.tintColor = .white
+		return button
+	}()
+	
+	private lazy var rotateButton: UIBarButtonItem = {
+		let image = UIImage(systemName: "rotate.right", named: "rotate", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
+		let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(rotateImage))
+		button.tintColor = .white
+		return button
+	}()
+	
+	private lazy var doneButton: UIBarButtonItem = {
+		let button = UIBarButtonItem(title: NSLocalizedString("Done", comment: ""), style: .done, target: self, action: #selector(finishScan))
+		button.tintColor = navigationController?.navigationBar.tintColor
+		return button
+	}()
     
     private lazy var cancelButton: UIBarButtonItem = {
-        let title = NSLocalizedString("wescan.scanning.cancel", tableName: nil, bundle: Bundle(for: EditScanViewController.self), value: "Cancel", comment: "A generic cancel button")
-        let button = UIBarButtonItem(title: title, style: .plain, target: self, action: #selector(cancelButtonTapped))
-        button.tintColor = navigationController?.navigationBar.tintColor
+        let button = UIBarButtonItem(title: NSLocalizedString("Cancel", comment: ""), style: .plain, target: self, action: #selector(cancelButtonTapped))
+		button.tintColor = .white
         return button
     }()
     
@@ -55,11 +76,19 @@ final class EditScanViewController: UIViewController {
     private var quadViewWidthConstraint = NSLayoutConstraint()
     private var quadViewHeightConstraint = NSLayoutConstraint()
     
+	private var results: ImageScannerResults?
+
     // MARK: - Life Cycle
     
     init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true) {
         self.image = rotateImage ? image.applyingPortraitOrientation() : image
         self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
+		
+		let ciImage = CIImage(image: self.image)
+		let enhancedImage = ciImage?.applyingAdaptiveThreshold()
+		let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
+		self.results = ImageScannerResults(detectedRectangle: self.quad, originalScan: ImageScannerScan(image: self.image), croppedScan: ImageScannerScan(image: self.image), enhancedScan: enhancedScan)
+
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -69,11 +98,17 @@ final class EditScanViewController: UIViewController {
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-        
+		
+		navigationController?.navigationBar.tintColor = .white
+		navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
+		navigationController?.navigationBar.barTintColor = defaultAppColor
+		navigationController?.navigationBar.backItem?.title = ""
+
         setupViews()
         setupConstraints()
-        title = NSLocalizedString("wescan.edit.title", tableName: nil, bundle: Bundle(for: EditScanViewController.self), value: "Edit Scan", comment: "The title of the EditScanViewController")
-        navigationItem.rightBarButtonItem = nextButton
+		setupToolbar()
+        title = NSLocalizedString("Crop", comment: "")
+        navigationItem.rightBarButtonItem = doneButton
         if let firstVC = self.navigationController?.viewControllers.first, firstVC == self {
             navigationItem.leftBarButtonItem = cancelButton
         } else {
@@ -99,14 +134,35 @@ final class EditScanViewController: UIViewController {
         // Work around for an iOS 11.2 bug where UIBarButtonItems don't get back to their normal state after being pressed.
         navigationController?.navigationBar.tintAdjustmentMode = .normal
         navigationController?.navigationBar.tintAdjustmentMode = .automatic
+		navigationController?.setToolbarHidden(true, animated: true)
+
     }
-    
+	
+	override func viewWillAppear(_ animated: Bool) {
+		super.viewWillAppear(animated)
+		
+		// We only show the toolbar (with the enhance button) if the enhanced image is available.
+		if enhancedImageIsAvailable {
+			navigationController?.setToolbarHidden(false, animated: true)
+		}
+	}
+	
     // MARK: - Setups
     
     private func setupViews() {
         view.addSubview(imageView)
         view.addSubview(quadView)
     }
+	
+	private func setupToolbar() {
+//		guard enhancedImageIsAvailable else { return }
+		
+		navigationController?.toolbar.barStyle = .blackTranslucent
+		
+		let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
+		let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+		toolbarItems = [fixedSpace, enhanceButton, flexibleSpace, rotateButton, fixedSpace]
+	}
     
     private func setupConstraints() {
         let imageViewConstraints = [
@@ -169,9 +225,83 @@ final class EditScanViewController: UIViewController {
         let results = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: image), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)
         
         let reviewViewController = ReviewViewController(results: results)
+		navigationController?.navigationBar.backItem?.title = ""
         navigationController?.pushViewController(reviewViewController, animated: true)
     }
     
+	// MARK: - Actions
+	@objc private func reloadImage() {
+		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
+			imageView.image = self.results?.enhancedScan?.image.rotated(by: rotationAngle) ?? results?.enhancedScan?.image
+		} else {
+			imageView.image = self.results?.croppedScan.image.rotated(by: rotationAngle) ?? results?.croppedScan.image
+		}
+	}
+	
+	@objc func toggleEnhancedImage() {
+		guard enhancedImageIsAvailable else { return }
+		
+		isCurrentlyDisplayingEnhancedImage.toggle()
+		reloadImage()
+		
+		if isCurrentlyDisplayingEnhancedImage {
+			enhanceButton.tintColor = .yellow
+		} else {
+			enhanceButton.tintColor = .white
+		}
+	}
+	
+	@objc func rotateImage() {
+		rotationAngle.value += 90
+		
+		if rotationAngle.value == 360 {
+			rotationAngle.value = 0
+		}
+		
+		reloadImage()
+	}
+	
+	@objc private func finishScan() {
+		guard let quad = quadView.quad,
+			  let ciImage = CIImage(image: image) else {
+			if let imageScannerController = navigationController as? ImageScannerController {
+				let error = ImageScannerControllerError.ciImageCreation
+				imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFailWithError: error)
+			}
+			return
+		}
+		let cgOrientation = CGImagePropertyOrientation(image.imageOrientation)
+		let orientedImage = ciImage.oriented(forExifOrientation: Int32(cgOrientation.rawValue))
+		let scaledQuad = quad.scale(quadView.bounds.size, image.size)
+		self.quad = scaledQuad
+		
+		// Cropped Image
+		var cartesianScaledQuad = scaledQuad.toCartesian(withHeight: image.size.height)
+		cartesianScaledQuad.reorganize()
+		
+		let filteredImage = orientedImage.applyingFilter("CIPerspectiveCorrection", parameters: [
+			"inputTopLeft": CIVector(cgPoint: cartesianScaledQuad.bottomLeft),
+			"inputTopRight": CIVector(cgPoint: cartesianScaledQuad.bottomRight),
+			"inputBottomLeft": CIVector(cgPoint: cartesianScaledQuad.topLeft),
+			"inputBottomRight": CIVector(cgPoint: cartesianScaledQuad.topRight)
+		])
+		
+		let croppedImage = UIImage.from(ciImage: filteredImage)
+		// Enhanced Image
+		let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+		let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
+		
+		var newResults = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: image), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)
+		self.results = newResults
+		
+		guard let imageScannerController = navigationController as? ImageScannerController else { return }
+		
+		newResults.croppedScan.rotate(by: rotationAngle)
+		newResults.enhancedScan?.rotate(by: rotationAngle)
+		newResults.doesUserPreferEnhancedScan = isCurrentlyDisplayingEnhancedImage
+		imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFinishScanningWithResults: newResults)
+	}
+	
     private func displayQuad() {
         let imageSize = image.size
         let imageFrame = CGRect(origin: quadView.frame.origin, size: CGSize(width: quadViewWidthConstraint.constant, height: quadViewHeightConstraint.constant))

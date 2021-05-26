@@ -43,7 +43,7 @@ public final class EditImageViewController: UIViewController {
     private lazy var quadView: QuadrilateralView = {
         let quadView = QuadrilateralView()
         quadView.editable = true
-        quadView.strokeColor = strokeColor
+		quadView.strokeColor = defaultAppColor.cgColor
         quadView.translatesAutoresizingMaskIntoConstraints = false
         return quadView
     }()
@@ -55,7 +55,7 @@ public final class EditImageViewController: UIViewController {
     public init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true, strokeColor: CGColor? = nil) {
         self.image = rotateImage ? image.applyingPortraitOrientation() : image
         self.quad = quad ?? EditImageViewController.defaultQuad(allOfImage: image)
-        self.strokeColor = strokeColor
+		self.strokeColor = defaultAppColor.cgColor
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -65,7 +65,7 @@ public final class EditImageViewController: UIViewController {
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-        
+		self.navigationController?.navigationBar.backItem?.title = ""
         setupViews()
         setupConstraints()
         zoomGestureController = ZoomGestureController(image: image, quadView: quadView)
