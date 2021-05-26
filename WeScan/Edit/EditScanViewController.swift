@@ -161,7 +161,7 @@ final class EditScanViewController: UIViewController {
 		
 		let fixedSpace = UIBarButtonItem(barButtonSystemItem: .fixedSpace, target: nil, action: nil)
 		let flexibleSpace = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-		toolbarItems = [fixedSpace, enhanceButton, flexibleSpace, rotateButton, fixedSpace]
+		toolbarItems = [flexibleSpace, rotateButton, fixedSpace] //fixedSpace, enhanceButton,
 	}
     
     private func setupConstraints() {
