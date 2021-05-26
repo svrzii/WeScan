@@ -66,7 +66,7 @@ final class EditScanViewController: UIViewController {
     }()
     
     /// The image the quadrilateral was detected on.
-    private let image: UIImage
+    private var image: UIImage
     
     /// The detected quadrilateral that can be edited by the user. Uses the image's coordinates.
     private var quad: Quadrilateral
@@ -228,26 +228,22 @@ final class EditScanViewController: UIViewController {
 		navigationController?.navigationBar.backItem?.title = ""
         navigationController?.pushViewController(reviewViewController, animated: true)
     }
-    
-	// MARK: - Actions
-	@objc private func reloadImage() {
-		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
-			imageView.image = self.results?.enhancedScan?.image.rotated(by: rotationAngle) ?? results?.enhancedScan?.image
-		} else {
-			imageView.image = self.results?.croppedScan.image.rotated(by: rotationAngle) ?? results?.croppedScan.image
-		}
-	}
 	
 	@objc func toggleEnhancedImage() {
 		guard enhancedImageIsAvailable else { return }
 		
 		isCurrentlyDisplayingEnhancedImage.toggle()
-		reloadImage()
 		
 		if isCurrentlyDisplayingEnhancedImage {
 			enhanceButton.tintColor = .yellow
 		} else {
 			enhanceButton.tintColor = .white
+		}
+		
+		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
+			self.imageView.image = self.results?.enhancedScan?.image
+		} else {
+			self.imageView.image = self.results?.originalScan.image
 		}
 	}
 	
@@ -258,7 +254,18 @@ final class EditScanViewController: UIViewController {
 			rotationAngle.value = 0
 		}
 		
-		reloadImage()
+		if let enhancedScanRotation = self.results?.enhancedScan?.image.rotated(by: rotationAngle), let croppedScanScanRotation = self.results?.croppedScan.image.rotated(by: rotationAngle), let originalScanRotation = self.results?.originalScan.image.rotated(by: rotationAngle), let image = self.image.rotated(by: rotationAngle) {
+			self.results?.enhancedScan?.image = enhancedScanRotation
+			self.results?.croppedScan.image = croppedScanScanRotation
+			self.results?.originalScan.image = originalScanRotation
+			self.image = image
+		}
+		
+		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
+			self.imageView.image = self.results?.enhancedScan?.image
+		} else {
+			self.imageView.image = self.results?.originalScan.image
+		}
 	}
 	
 	@objc private func finishScan() {
@@ -295,9 +302,6 @@ final class EditScanViewController: UIViewController {
 		self.results = newResults
 		
 		guard let imageScannerController = navigationController as? ImageScannerController else { return }
-		
-		newResults.croppedScan.rotate(by: rotationAngle)
-		newResults.enhancedScan?.rotate(by: rotationAngle)
 		newResults.doesUserPreferEnhancedScan = isCurrentlyDisplayingEnhancedImage
 		imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFinishScanningWithResults: newResults)
 	}
