@@ -86,6 +86,7 @@
 		C31DD8A320C087D80072D439 /* ZoomGestureController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C31DD8A220C087D80072D439 /* ZoomGestureController.swift */; };
 		C3789C9B20CC69AD001B423F /* QuadrilateralViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3789C9A20CC69AD001B423F /* QuadrilateralViewTests.swift */; };
 		C3E2EB8E20B8970800A42E58 /* UIImage+Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3E2EB8D20B8970800A42E58 /* UIImage+Utils.swift */; };
+		E8C7AAE7265E4D9D00175613 /* ic_bar_back.png in Resources */ = {isa = PBXBuildFile; fileRef = E8C7AAE6265E4D9D00175613 /* ic_bar_back.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -293,6 +294,7 @@
 		C31DD8A220C087D80072D439 /* ZoomGestureController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZoomGestureController.swift; sourceTree = "<group>"; };
 		C3789C9A20CC69AD001B423F /* QuadrilateralViewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuadrilateralViewTests.swift; sourceTree = "<group>"; };
 		C3E2EB8D20B8970800A42E58 /* UIImage+Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+Utils.swift"; sourceTree = "<group>"; };
+		E8C7AAE6265E4D9D00175613 /* ic_bar_back.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = ic_bar_back.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -567,6 +569,7 @@
 		B94FBB9D2178647B001ED1B4 /* Assets */ = {
 			isa = PBXGroup;
 			children = (
+				E8C7AAE5265E4D8E00175613 /* Back */,
 				B9E49DB421BFCE7A000E994D /* Rotate */,
 				B983380121A6CA4E00AAE307 /* Enhance */,
 				B9274D2D219AE10B00F9FCD1 /* Flash */,
@@ -593,6 +596,14 @@
 				B9E49DBD21BFD3BB000E994D /* rotate@3x.png */,
 			);
 			name = Rotate;
+			sourceTree = "<group>";
+		};
+		E8C7AAE5265E4D8E00175613 /* Back */ = {
+			isa = PBXGroup;
+			children = (
+				E8C7AAE6265E4D9D00175613 /* ic_bar_back.png */,
+			);
+			name = Back;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -832,6 +843,7 @@
 				B94FBBAE2178652B001ED1B4 /* flash@3x.png in Resources */,
 				B940E38A21A77192003B3C0B /* enhance@3x.png in Resources */,
 				B940E38B21A77192003B3C0B /* enhance@2x.png in Resources */,
+				E8C7AAE7265E4D9D00175613 /* ic_bar_back.png in Resources */,
 				B94FBBB42178653C001ED1B4 /* flashUnavailable.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
