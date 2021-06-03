@@ -11,7 +11,7 @@ import UIKit
 /// The `ReviewViewController` offers an interface to review the image after it has been cropped and deskwed according to the passed in quadrilateral.
 final class ReviewViewController: UIViewController {
     
-    private var rotationAngle = Measurement<UnitAngle>(value: 0, unit: .degrees)
+	private var rotationAngle: CGFloat = 0
     private var enhancedImageIsAvailable = false
     private var isCurrentlyDisplayingEnhancedImage = false
     
@@ -129,9 +129,9 @@ final class ReviewViewController: UIViewController {
     
     @objc private func reloadImage() {
         if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
-            imageView.image = results.enhancedScan?.image.rotated(by: rotationAngle) ?? results.enhancedScan?.image
+            imageView.image = results.enhancedScan?.image.rotate(degress: rotationAngle) ?? results.enhancedScan?.image
         } else {
-            imageView.image = results.croppedScan.image.rotated(by: rotationAngle) ?? results.croppedScan.image
+			imageView.image = results.croppedScan.image.rotate(degress: rotationAngle) ?? results.croppedScan.image
         }
     }
     
@@ -149,10 +149,10 @@ final class ReviewViewController: UIViewController {
     }
     
     @objc func rotateImage() {
-        rotationAngle.value += 90
+        rotationAngle += 90
         
-        if rotationAngle.value == 360 {
-            rotationAngle.value = 0
+        if rotationAngle == 360 {
+            rotationAngle = 0
         }
         
         reloadImage()
@@ -162,8 +162,14 @@ final class ReviewViewController: UIViewController {
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
         
         var newResults = results
-        newResults.croppedScan.rotate(by: rotationAngle)
-        newResults.enhancedScan?.rotate(by: rotationAngle)
+		if let cropped = newResults.croppedScan.image.rotate(degress: rotationAngle) {
+			newResults.croppedScan.image = cropped
+		}
+		
+		if let enhanced = newResults.enhancedScan?.image.rotate(degress: rotationAngle) {
+			newResults.enhancedScan?.image = enhanced
+		}
+		
         newResults.doesUserPreferEnhancedScan = isCurrentlyDisplayingEnhancedImage
         imageScannerController.imageScannerDelegate?.imageScannerController(imageScannerController, didFinishScanningWithResults: newResults)
     }

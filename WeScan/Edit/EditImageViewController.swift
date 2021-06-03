@@ -53,7 +53,7 @@ public final class EditImageViewController: UIViewController {
     // MARK: - Life Cycle
     
     public init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true, strokeColor: CGColor? = nil) {
-        self.image = rotateImage ? image.applyingPortraitOrientation() : image
+        self.image = rotateImage ? image.fixedOrientation : image
         self.quad = quad ?? EditImageViewController.defaultQuad(allOfImage: image)
 		self.strokeColor = defaultAppColor.cgColor
         super.init(nibName: nil, bundle: nil)
@@ -147,7 +147,7 @@ public final class EditImageViewController: UIViewController {
     }
     
     private func reloadImage(withAngle angle: Measurement<UnitAngle>) {
-        guard let newImage = image.rotated(by: angle) else { return }
+		guard let newImage = image.rotate(degress: CGFloat(angle.value)) else { return }
         let newQuad = EditImageViewController.defaultQuad(allOfImage: newImage)
         
         image = newImage

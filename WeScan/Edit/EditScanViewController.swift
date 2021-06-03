@@ -11,7 +11,7 @@ import AVFoundation
 
 /// The `EditScanViewController` offers an interface for the user to edit the detected quadrilateral.
 final class EditScanViewController: UIViewController {
-	private var rotationAngle = Measurement<UnitAngle>(value: 0, unit: .degrees)
+	private var rotationAngle: CGFloat = 0
 	private var enhancedImageIsAvailable = true
 	private var isCurrentlyDisplayingEnhancedImage = false
 	
@@ -81,7 +81,7 @@ final class EditScanViewController: UIViewController {
     // MARK: - Life Cycle
     
     init(image: UIImage, quad: Quadrilateral?, rotateImage: Bool = true) {
-        self.image = rotateImage ? image.applyingPortraitOrientation() : image
+        self.image = rotateImage ? image.fixedOrientation : image
         self.quad = quad ?? EditScanViewController.defaultQuad(forImage: image)
 		
 		let ciImage = CIImage(image: self.image)
@@ -98,7 +98,7 @@ final class EditScanViewController: UIViewController {
     
     override public func viewDidLoad() {
         super.viewDidLoad()
-		
+		navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 		navigationController?.navigationBar.tintColor = .white
 		navigationController?.navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.white]
 		navigationController?.navigationBar.barTintColor = defaultAppColor
@@ -219,7 +219,7 @@ final class EditScanViewController: UIViewController {
         
         let croppedImage = UIImage.from(ciImage: filteredImage)
         // Enhanced Image
-        let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+		let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.fixedOrientation
         let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
         
         let results = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: image), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)
@@ -248,24 +248,32 @@ final class EditScanViewController: UIViewController {
 	}
 	
 	@objc func rotateImage() {
-		rotationAngle.value += 90
+		rotationAngle += 90
 		
-		if rotationAngle.value == 360 {
-			rotationAngle.value = 0
+		if rotationAngle == 360 {
+			rotationAngle = 0
 		}
 		
-		if let enhancedScanRotation = self.results?.enhancedScan?.image.rotated(by: rotationAngle), let croppedScanScanRotation = self.results?.croppedScan.image.rotated(by: rotationAngle), let originalScanRotation = self.results?.originalScan.image.rotated(by: rotationAngle), let image = self.image.rotated(by: rotationAngle) {
+		if let enhancedScanRotation = self.results?.enhancedScan?.image.rotate(degress: rotationAngle) {
 			self.results?.enhancedScan?.image = enhancedScanRotation
-			self.results?.croppedScan.image = croppedScanScanRotation
-			self.results?.originalScan.image = originalScanRotation
-			self.image = image
 		}
 		
-		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
-			self.imageView.image = self.results?.enhancedScan?.image
-		} else {
-			self.imageView.image = self.results?.originalScan.image
+		if let croppedScanScanRotation = self.results?.croppedScan.image.rotate(degress: rotationAngle) {
+			self.results?.croppedScan.image = croppedScanScanRotation
 		}
+		
+		if let originalScanRotation = self.results?.originalScan.image.rotate(degress: rotationAngle) {
+			self.results?.originalScan.image = originalScanRotation
+			self.image = originalScanRotation
+		}
+		
+		
+		
+//		if enhancedImageIsAvailable, isCurrentlyDisplayingEnhancedImage {
+//			self.imageView.image = self.results?.enhancedScan?.image
+//		} else {
+		self.imageView.image = self.image
+//		}
 	}
 	
 	@objc private func finishScan() {
@@ -295,7 +303,7 @@ final class EditScanViewController: UIViewController {
 		
 		let croppedImage = UIImage.from(ciImage: filteredImage)
 		// Enhanced Image
-		let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.withFixedOrientation()
+		let enhancedImage = filteredImage.applyingAdaptiveThreshold()?.fixedOrientation
 		let enhancedScan = enhancedImage.flatMap { ImageScannerScan(image: $0) }
 		
 		var newResults = ImageScannerResults(detectedRectangle: scaledQuad, originalScan: ImageScannerScan(image: image), croppedScan: ImageScannerScan(image: croppedImage), enhancedScan: enhancedScan)

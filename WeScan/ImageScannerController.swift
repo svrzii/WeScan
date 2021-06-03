@@ -67,6 +67,7 @@ open class ImageScannerController: UINavigationController {
         
         self.imageScannerDelegate = delegate
 		
+		navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 		defaultAppColor = defaultColor ?? .black
 		navigationBar.isTranslucent = false
 		navigationBar.tintColor = .white
@@ -170,10 +171,10 @@ public struct ImageScannerScan {
         
     }
     
-    mutating func rotate(by rotationAngle: Measurement<UnitAngle>) {
-        guard rotationAngle.value != 0, rotationAngle.value != 360 else { return }
-        image = image.rotated(by: rotationAngle) ?? image
-    }
+//    mutating func rotate(by rotationAngle: Measurement<UnitAngle>) {
+//        guard rotationAngle.value != 0, rotationAngle.value != 360 else { return }
+//        image = image.rotate(degress: rotationAngle) ?? image
+//    }
 }
 
 /// Data structure containing information about a scanning session.

@@ -163,6 +163,7 @@ public final class ScannerViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
+		navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 		navigationItem.setLeftBarButtonItems([flashButton, photosButton], animated: false)
 //        navigationItem.setRightBarButton(autoScanButton, animated: false)
         
@@ -402,8 +403,9 @@ extension ScannerViewController: UIImagePickerControllerDelegate, UINavigationCo
 	public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
 		picker.dismiss(animated: true)
 		
-		guard let image = info[.originalImage] as? UIImage else { return }
-	
+		guard let originalImage = info[.originalImage] as? UIImage  else { return }
+		
+		let image = originalImage.fixedOrientation
 		guard let imageScannerController = navigationController as? ImageScannerController else { return }
 
 		// If an image was passed in by the host app (e.g. picked from the photo library), use it instead of the document scanner.
