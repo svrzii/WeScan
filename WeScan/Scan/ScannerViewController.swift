@@ -59,6 +59,14 @@ public final class ScannerViewController: UIViewController {
         
         return button
     }()
+	
+	private lazy var photosButton: UIBarButtonItem = {
+		let image = UIImage(named: "ic_gallery", in: Bundle(for: ScannerViewController.self), compatibleWith: nil)
+		let button = UIBarButtonItem(image: image, style: .plain, target: self, action: #selector(openPhotos))
+		button.tintColor = .white
+		
+		return button
+	}()
     
     private lazy var activityIndicator: UIActivityIndicatorView = {
         let activityIndicator = UIActivityIndicatorView(style: .gray)
@@ -155,7 +163,7 @@ public final class ScannerViewController: UIViewController {
     }
     
     private func setupNavigationBar() {
-        navigationItem.setLeftBarButton(flashButton, animated: false)
+		navigationItem.setLeftBarButtonItems([flashButton, photosButton], animated: false)
 //        navigationItem.setRightBarButton(autoScanButton, animated: false)
         
         if UIImagePickerController.isFlashAvailable(for: .rear) == false {
@@ -319,6 +327,13 @@ public final class ScannerViewController: UIViewController {
             flashButton.tintColor = UIColor.lightGray
         }
     }
+	
+	@objc private func openPhotos() {
+		let imagePicker = UIImagePickerController()
+		imagePicker.delegate = self
+		imagePicker.sourceType = .photoLibrary
+		present(imagePicker, animated: true)
+	}
     
     @objc private func cancelImageScannerController() {
         guard let imageScannerController = navigationController as? ImageScannerController else { return }
@@ -377,4 +392,25 @@ extension ScannerViewController: RectangleDetectionDelegateProtocol {
         quadView.drawQuadrilateral(quad: transformedQuad, animated: true)
     }
     
+}
+
+extension ScannerViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+	public func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+		picker.dismiss(animated: true)
+	}
+	
+	public func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+		picker.dismiss(animated: true)
+		
+		guard let image = info[.originalImage] as? UIImage else { return }
+	
+		guard let imageScannerController = navigationController as? ImageScannerController else { return }
+
+		// If an image was passed in by the host app (e.g. picked from the photo library), use it instead of the document scanner.
+		imageScannerController.detect(image: image) { [weak imageScannerController] detectedQuad in
+			let editVC = EditScanViewController(image: image, quad: detectedQuad)
+			imageScannerController?.navigationBar.backItem?.title = ""
+			imageScannerController?.pushViewController(editVC, animated: false)
+		}
+	}
 }
